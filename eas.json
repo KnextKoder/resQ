@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 16.4.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_aG90LXRvbWNhdC03My5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_SERVER_URL": "https://res-q-server.vercel.app/",
+        "EXPO_PUBLIC_VERCEL_DEPLOYMENT_BYPASS_SECRET": "FQQM8sjks5AxR5unjdLh40ZVAhwbtqt7"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_aG90LXRvbWNhdC03My5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_SERVER_URL": "https://res-q-server.vercel.app/",
+        "EXPO_PUBLIC_VERCEL_DEPLOYMENT_BYPASS_SECRET": "FQQM8sjks5AxR5unjdLh40ZVAhwbtqt7"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_aG90LXRvbWNhdC03My5jbGVyay5hY2NvdW50cy5kZXYk",
+        "EXPO_PUBLIC_SERVER_URL": "https://res-q-server.vercel.app/",
+        "EXPO_PUBLIC_VERCEL_DEPLOYMENT_BYPASS_SECRET": "FQQM8sjks5AxR5unjdLh40ZVAhwbtqt7"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

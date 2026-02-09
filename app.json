@@ -36,18 +36,31 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "This app needs access to your microphone to record voice notes.",
-        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to send emergency services to your exact position."
-      }
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to send emergency services to your exact position.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.knextkoder.resQ"
     },
     "android": {
       "permissions": [
         "RECORD_AUDIO",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.knextkoder.resQ"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3a1bd77c-fd29-4d29-9b51-03f1da7fc0ff"
       }
     }
   }
