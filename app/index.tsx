@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut } from '@clerk/clerk-expo'
 import { Link } from 'expo-router'
-import { Text, View } from 'react-native'
+import { Text, View, Image, TouchableOpacity } from 'react-native'
 import HomeScreen from '@/components/screens/HomeScreen'
 
 export default function Page() {
@@ -10,14 +10,28 @@ export default function Page() {
         <HomeScreen />
       </SignedIn>
       <SignedOut>
-        <View className="flex-1 items-center justify-center p-6">
-          <View className="items-center gap-4">
-            <Text className="text-2xl font-bold mb-4">Welcome</Text>
-            <Link href="/(auth)/sign-in" className="bg-blue-500 text-white font-bold py-3 px-6 rounded-lg text-center overflow-hidden w-64">
-              <Text>Sign in</Text>
+        <View className="flex-1 items-center justify-between p-10 py-24">
+          <View className="items-center mt-12">
+            <View className="shadow-2xl shadow-slate-300">
+              <Image
+                source={require('../assets/icon.png')}
+                style={{ width: 120, height: 120, borderRadius: 30 }}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+
+          <View className="w-full gap-4">
+            <Link href="/(auth)/sign-in" asChild>
+              <TouchableOpacity className="bg-slate-900 p-5 rounded-2xl items-center shadow-lg shadow-slate-400">
+                <Text className="text-white font-bold text-lg">Sign In</Text>
+              </TouchableOpacity>
             </Link>
-            <Link href="/(auth)/sign-up" className="bg-gray-800 text-white font-bold py-3 px-6 rounded-lg text-center overflow-hidden w-64">
-              <Text>Sign up</Text>
+
+            <Link href="/(auth)/sign-up" asChild>
+              <TouchableOpacity className="border-2 border-slate-200 p-5 rounded-2xl items-center">
+                <Text className="text-slate-900 font-bold text-lg">Create Account</Text>
+              </TouchableOpacity>
             </Link>
           </View>
         </View>
