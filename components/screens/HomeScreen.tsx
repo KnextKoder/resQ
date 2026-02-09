@@ -24,6 +24,7 @@ export default function HomeScreen() {
     const { user } = useUser()
     const [isSending, setIsSending] = React.useState(false)
     const [location, setLocation] = React.useState<Location.LocationObject | null>(null)
+    const locationPromiseRef = React.useRef<Promise<Location.LocationObject> | null>(null)
 
     const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
     const recorderState = useAudioRecorderState(audioRecorder)
@@ -37,6 +38,19 @@ export default function HomeScreen() {
                 playsInSilentMode: true,
                 allowsRecording: true,
             })
+
+            // Request permissions and fetch initial location on mount
+            const { status } = await Location.requestForegroundPermissionsAsync()
+            if (status === 'granted') {
+                try {
+                    console.log('Fetching initial location...')
+                    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+                    console.log('Initial location fetched:', loc.coords.latitude, loc.coords.longitude)
+                    setLocation(loc)
+                } catch (err) {
+                    console.error('Failed to fetch initial location', err)
+                }
+            }
         })()
     }, [])
 
@@ -86,33 +100,33 @@ export default function HomeScreen() {
         return { backgroundColor }
     })
 
-    const uploadAudio = async (uri: string) => {
+    const uploadFunc = async (uri: string, loc: Location.LocationObject | null = null) => {
         setIsSending(true)
         console.log('Uploading audio from:', uri)
 
         try {
-            const formData = new FormData();
+            const formData = new FormData()
             formData.append('audio', {
                 uri: uri,
                 type: 'audio/m4a',
                 name: 'emergency_audio.m4a',
-            } as any);
+            } as any)
 
-            // Add location data if available
-            if (location) {
-                formData.append('latitude', location.coords.latitude.toString());
-                formData.append('longitude', location.coords.longitude.toString());
-                console.log('Attaching location:', location.coords.latitude, location.coords.longitude);
+            const locationToSend = loc || location
+            if (locationToSend) {
+                formData.append('latitude', locationToSend.coords.latitude.toString())
+                formData.append('longitude', locationToSend.coords.longitude.toString())
+                console.log('Attaching location:', locationToSend.coords.latitude, locationToSend.coords.longitude)
             }
 
-            const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL || 'http://localhost:3000';
+            const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL
             const vercelBypass = process.env.EXPO_PUBLIC_VERCEL_DEPLOYMENT_BYPASS_SECRET
-            console.log('Server URL and Vercel Bypass:', serverUrl, vercelBypass);
+            console.log('Server URL and Vercel Bypass:', serverUrl, vercelBypass)
 
             console.log("Sending request to server...")
-            const baseUrl = serverUrl.replace(/\/$/, '');
-            const targetUrl = `${baseUrl}/emergency`;
-            console.log("Sending request to:", targetUrl);
+            const baseUrl = serverUrl.replace(/\/$/, '')
+            const targetUrl = `${baseUrl}/emergency`
+            console.log("Sending request to:", targetUrl)
 
             const response = await fetch(targetUrl, {
                 method: 'POST',
@@ -120,14 +134,14 @@ export default function HomeScreen() {
                 headers: {
                     'x-vercel-protection-bypass': vercelBypass || ''
                 },
-            });
-            console.log("Response from server:", response);
+            })
+            console.log("Response from server:", response)
             if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}`);
+                throw new Error(`Server responded with ${response.status}`)
             }
 
-            const result = await response.json();
-            console.log('Server response:', result);
+            const result = await response.json()
+            console.log('Server response:', result)
 
             Alert.alert('Dispatched', 'Emergency response services have been dispatched to your location.')
         } catch (err) {
@@ -140,11 +154,10 @@ export default function HomeScreen() {
 
     const startRecording = async () => {
         try {
-            // Request multiple permissions concurrently
             const [audioPermission, locationPermission] = await Promise.all([
                 AudioModule.requestRecordingPermissionsAsync(),
                 Location.requestForegroundPermissionsAsync()
-            ]);
+            ])
 
             if (!audioPermission.granted) {
                 Alert.alert('Permission denied', 'Allow microphone access to record.')
@@ -156,14 +169,14 @@ export default function HomeScreen() {
                 // We proceed but with a warning, or you could return here
             }
 
-            // Start fetching location immediately when recording starts
-            // We don't await it here so it doesn't delay the recording start
-            Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+            locationPromiseRef.current = Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+
+            locationPromiseRef.current
                 .then(loc => {
-                    console.log('Location fetched:', loc.coords.latitude, loc.coords.longitude);
-                    setLocation(loc);
+                    console.log('Refreshed location fetched:', loc.coords.latitude, loc.coords.longitude)
+                    setLocation(loc)
                 })
-                .catch(err => console.error('Failed to fetch location', err));
+                .catch(err => console.error('Failed to fetch location', err))
 
             await audioRecorder.prepareToRecordAsync()
             audioRecorder.record()
@@ -178,7 +191,29 @@ export default function HomeScreen() {
             const uri = audioRecorder.uri
             console.log('Audio saved locally at:', uri)
             if (uri) {
-                await uploadAudio(uri)
+                let finalLocation = location
+                if (!finalLocation && locationPromiseRef.current) {
+                    try {
+                        console.log('Waiting for location...')
+                        finalLocation = await Promise.race([
+                            locationPromiseRef.current,
+                            new Promise<null>(resolve => setTimeout(() => resolve(null), 2000))
+                        ])
+                    } catch (e) {
+                        console.log('Error awaiting location:', e)
+                    }
+                }
+
+                if (finalLocation) {
+                    setLocation(finalLocation)
+                    await uploadFunc(uri, finalLocation)
+                } else {
+                    Alert.alert(
+                        'Location Missing',
+                        'Could not determine your location. Please ensure GPS is enabled and try again.',
+                        [{ text: 'OK', onPress: () => setIsSending(false) }]
+                    )
+                }
             }
         } catch (err) {
             console.error('Failed to stop recording', err)
